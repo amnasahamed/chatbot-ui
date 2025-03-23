@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Palago Consultants Chatbot</title>
     <style>
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; 
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
             padding: 0;
-            background-color: #f5f7fa; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
+            background-color: #f5f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .chat-container {
             width: 400px;
@@ -98,31 +98,54 @@
     </div>
 
     <script>
-        const webhookUrl = "https://n8n.vahiy.in/webhook/ac8aecfd-9810-4ac7-bf0d-2d89d81a7c00";  // Replace with your webhook URL
-        
+        const webhookUrl = "https://n8n.vahiy.in/webhook/ac8aecfd-9810-4ac7-bf0d-2d89d81a7c00"; // Replace with your webhook URL
+
         function sendMessage() {
             let input = document.getElementById("userInput").value;
             let chatBody = document.getElementById("chatBody");
+
+            // Basic input sanitization (preventing basic script injection)
+            input = input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
             if (!input) return;
-            
+
             let userMessage = document.createElement("div");
             userMessage.className = "message user-message";
             userMessage.innerText = input;
             chatBody.appendChild(userMessage);
             document.getElementById("userInput").value = "";
-            
+
             fetch(webhookUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: input })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                let botMessage = document.createElement("div");
-                botMessage.className = "message bot-message";
-                botMessage.innerText = data.response;
-                chatBody.appendChild(botMessage);
-                chatBody.scrollTop = chatBody.scrollHeight;
+                if (data && data.response) {
+                    let botMessage = document.createElement("div");
+                    botMessage.className = "message bot-message";
+                    botMessage.innerText = data.response;
+                    chatBody.appendChild(botMessage);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                } else {
+                    let errorMessage = document.createElement("div");
+                    errorMessage.className = "message bot-message";
+                    errorMessage.innerText = "Error: Invalid response from server.";
+                    chatBody.appendChild(errorMessage);
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                let errorMessage = document.createElement("div");
+                errorMessage.className = "message bot-message";
+                errorMessage.innerText = "Failed to send message. Please try again.";
+                chatBody.appendChild(errorMessage);
             });
         }
     </script>
