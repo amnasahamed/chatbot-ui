@@ -56,7 +56,14 @@
         .bot-message {
             align-self: flex-start;
             background: #ddd;
+            color: #000;
         }
+        .error-message {
+            align-self: flex-start;
+            background: #dc3545;
+            color: white;
+        }
+
         .chat-footer {
             display: flex;
             padding: 12px;
@@ -98,13 +105,12 @@
     </div>
 
     <script>
-        const webhookUrl = "https://n8n.vahiy.in/webhook/ac8aecfd-9810-4ac7-bf0d-2d89d81a7c00"; // Replace with your webhook URL
+        const webhookUrl = "https://n8n.vahiy.in/webhook/ac8aecfd-9810-4ac7-bf0d-2d89d81a7c00";
 
         function sendMessage() {
             let input = document.getElementById("userInput").value;
             let chatBody = document.getElementById("chatBody");
 
-            // Basic input sanitization (preventing basic script injection)
             input = input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
             if (!input) return;
@@ -127,24 +133,31 @@
                 return response.json();
             })
             .then(data => {
+                console.log("Received data:", data); // Log the received data
                 if (data && data.response) {
                     let botMessage = document.createElement("div");
                     botMessage.className = "message bot-message";
                     botMessage.innerText = data.response;
                     chatBody.appendChild(botMessage);
                     chatBody.scrollTop = chatBody.scrollHeight;
-                } else {
+                } else if (data && data.error) {
                     let errorMessage = document.createElement("div");
-                    errorMessage.className = "message bot-message";
-                    errorMessage.innerText = "Error: Invalid response from server.";
+                    errorMessage.className = "message error-message";
+                    errorMessage.innerText = "Error: " + data.error;
+                    chatBody.appendChild(errorMessage);
+                }
+                else {
+                    let errorMessage = document.createElement("div");
+                    errorMessage.className = "message error-message";
+                    errorMessage.innerText = "Error: Invalid response format from server.";
                     chatBody.appendChild(errorMessage);
                 }
             })
             .catch(error => {
                 console.error("Fetch error:", error);
                 let errorMessage = document.createElement("div");
-                errorMessage.className = "message bot-message";
-                errorMessage.innerText = "Failed to send message. Please try again.";
+                errorMessage.className = "message error-message";
+                errorMessage.innerText = "Failed to send message. Please try again. Error: " + error.message;
                 chatBody.appendChild(errorMessage);
             });
         }
