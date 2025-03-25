@@ -134,10 +134,10 @@
             })
             .then(data => {
                 console.log("Received data:", data); // Log the received data
-                if (data && data.response) {
+                if (Array.isArray(data) && data.length > 0 && data[0].response) {
                     let botMessage = document.createElement("div");
                     botMessage.className = "message bot-message";
-                    botMessage.innerText = data.response;
+                    botMessage.innerText = data[0].response;
                     chatBody.appendChild(botMessage);
                     chatBody.scrollTop = chatBody.scrollHeight;
                 } else if (data && data.error) {
